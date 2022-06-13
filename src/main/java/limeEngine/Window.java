@@ -38,10 +38,10 @@ public class Window {
         switch (nextScene){
             case 0:
                 currentScene = new LevelEditorScene();
-                //currentScene.init();
+                currentScene.init();
                 break;
             case 1: currentScene = new LevelScene();
-                //currentScene.init();
+                currentScene.init();
                 break;
             default:
                 assert false : "Scene: '" + nextScene + "' does not exist!";
