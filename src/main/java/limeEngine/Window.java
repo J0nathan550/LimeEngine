@@ -4,6 +4,7 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -13,12 +14,17 @@ public class Window {
     private String title;
     private long glfwWindow;
 
+    private float r,g,b,a;
     public static Window window = null;
 
     private Window(){
         this.width = 1920;
         this.height = 1080;
         this.title = "LimeEngine";
+        r = 1;
+        g = 1;
+        b = 1;
+        a = 1;
     }
     public static Window get(){
         if(Window.window == null){
@@ -31,6 +37,14 @@ public class Window {
         System.out.println("Hello LWJGL" + Version.getVersion() + "!");
         init();
         loop();
+
+        //Free memory
+        glfwFreeCallbacks(glfwWindow);
+        glfwDestroyWindow(glfwWindow);
+
+        //Terminate GLFW and free the error callback
+        glfwTerminate();
+        glfwSetErrorCallback(null).free();
 
     }
 
@@ -55,6 +69,14 @@ public class Window {
             throw new IllegalStateException("Unable to create GLFW window!");
         }
 
+        //Configure Mouse
+        glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
+        glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
+        glfwSetScrollCallback(glfwWindow, MouseListener::mouseScrollCallBack);
+
+        //Configure Keyboard
+        glfwSetKeyCallback(glfwWindow, KeyListener::keyCallBack);
+
         //Make the OpenGL current context
         glfwMakeContextCurrent(glfwWindow);
 
@@ -72,13 +94,35 @@ public class Window {
         GL.createCapabilities();
 
     }
+    private boolean fadeToBlack;
     public void loop(){
         while(!glfwWindowShouldClose(glfwWindow)){
             //Poll Events
             glfwPollEvents();
 
-            glClearColor(0.5f,0.5f,0.5f, 1.0f);
+            glClearColor(r,g,b,a);
             glClear(GL_COLOR_BUFFER_BIT);
+
+            if(KeyListener.isKeyPressed(GLFW_KEY_SPACE) || MouseListener.mouseButtonDown(GLFW_MOUSE_BUTTON_1)){
+                if(fadeToBlack == false){
+                    fadeToBlack = true;
+                }
+                else{
+                    fadeToBlack = false;
+                }
+            }
+
+            if (fadeToBlack){
+                r = Math.max(r - 0.01f, 0);
+                g = Math.max(r - 0.01f, 0);
+                b = Math.max(r - 0.01f, 0);
+                a = Math.max(r - 0.01f, 0);
+            } else {
+                r = Math.max(r + 0.01f, 0);
+                g = Math.max(r + 0.01f, 0);
+                b = Math.max(r + 0.01f, 0);
+                a = Math.max(r + 0.01f, 0);
+            }
 
             glfwSwapBuffers(glfwWindow);
         }
