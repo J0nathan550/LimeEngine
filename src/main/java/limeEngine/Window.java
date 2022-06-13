@@ -3,6 +3,7 @@ package limeEngine;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
+import util.Time;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -13,9 +14,9 @@ public class Window {
     private int width, height;
     private String title;
     private long glfwWindow;
-
-    private float r,g,b,a;
+    public float r,g,b,a;
     public static Window window = null;
+    private static Scene currentScene = null;
 
     private Window(){
         this.width = 1920;
@@ -31,6 +32,21 @@ public class Window {
             Window.window = new Window();
         }
         return Window.window;
+    }
+
+    public static void changeScene(int nextScene){
+        switch (nextScene){
+            case 0:
+                currentScene = new LevelEditorScene();
+                //currentScene.init();
+                break;
+            case 1: currentScene = new LevelScene();
+                //currentScene.init();
+                break;
+            default:
+                assert false : "Scene: '" + nextScene + "' does not exist!";
+                break;
+        }
     }
 
     public void run(){
@@ -92,10 +108,14 @@ public class Window {
         // creates the GLCapabilities instance and makes the OpenGL
         // bindings available for use.
         GL.createCapabilities();
-
+        Window.changeScene(0);
     }
     private boolean fadeToBlack;
     public void loop(){
+        float beginTime = Time.getTime();
+        float endTime;
+        float dt = -1.0f;
+
         while(!glfwWindowShouldClose(glfwWindow)){
             //Poll Events
             glfwPollEvents();
@@ -103,28 +123,16 @@ public class Window {
             glClearColor(r,g,b,a);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            if(KeyListener.isKeyPressed(GLFW_KEY_SPACE) || MouseListener.mouseButtonDown(GLFW_MOUSE_BUTTON_1)){
-                if(fadeToBlack == false){
-                    fadeToBlack = true;
-                }
-                else{
-                    fadeToBlack = false;
-                }
-            }
-
-            if (fadeToBlack){
-                r = Math.max(r - 0.01f, 0);
-                g = Math.max(r - 0.01f, 0);
-                b = Math.max(r - 0.01f, 0);
-                a = Math.max(r - 0.01f, 0);
-            } else {
-                r = Math.max(r + 0.01f, 0);
-                g = Math.max(r + 0.01f, 0);
-                b = Math.max(r + 0.01f, 0);
-                a = Math.max(r + 0.01f, 0);
+            if (dt >= 0){
+                currentScene.update(dt);
             }
 
             glfwSwapBuffers(glfwWindow);
+            endTime = Time.getTime();
+            dt = endTime - beginTime;
+            beginTime = endTime;
+
+
         }
     }
 
